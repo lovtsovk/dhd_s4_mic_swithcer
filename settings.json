@@ -1,0 +1,17 @@
+{
+  "01FA": {
+    "ip": "192.168.10.223",
+    "login": "live",
+    "pass": "",
+    "ch": 1,
+    "preset_name": "Tuchinceva"
+  },
+    "01F9": {
+    "ip": "192.168.10.223",
+    "login": "live",
+    "pass": "",
+    "ch": 1,
+    "preset_name": "Ratcig"
+  }
+}
+
