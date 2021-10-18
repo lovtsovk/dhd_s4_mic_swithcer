@@ -25,16 +25,19 @@ def logger_config(is_debug):
 
 
 def set_s4_preset(mic):
-    log.debug('s4 send {} '.format(mic))
-    instance = telnetlib.Telnet(mic["ip"], 3003)
-    instance.read_until('READY\r\n'.encode('ascii'), 3)
-    instance.write('login {} {} \r\n'.format(mic["login"], mic["pass"]).encode('ascii'))
-    instance.read_until('OK : LOGIN {}\r\n'.format(mic["login"]).encode('ascii'), 3)
-    instance.write(('CH{}.Preset.ONAIR={}\r\n'.format(mic["ch"], mic["preset_name"])).encode('ascii'))
-    instance.read_until(b'OK\r\n')
-    instance.close()
-    log.debug('S4 preset Set')
-
+    try:
+        log.debug('s4 send {} '.format(mic))
+        instance = telnetlib.Telnet(mic["ip"], 3003)
+        instance.read_until('READY\r\n'.encode('ascii'), 3)
+        instance.write('login {} {} \r\n'.format(mic["login"], mic["pass"]).encode('ascii'))
+        instance.read_until('OK : LOGIN {}\r\n'.format(mic["login"]).encode('ascii'), 3)
+        instance.write(('CH{}.Preset.ONAIR={}\r\n'.format(mic["ch"], mic["preset_name"])).encode('ascii'))
+        instance.read_until(b'OK\r\n')
+        instance.close()
+        log.debug('On bigvoice {} ch{} preset is {}'.format(mic["ip"], mic["ch"], mic["preset_name"]))
+    except Exception:
+        log.error('Cannot set preset on bigvoice')
+        return 
 
 def find_key(str):
     for i in mic_table:
@@ -51,8 +54,8 @@ def read_dhd(telnet_instance):
         # data = b'\x03\x0e\x01\xf9\x01'
         if data != b'':
             data_string = data.hex()
-            log.info(data_string)
-            res = find_key('recieved data {}'.format(data_string))
+            log.info('recieved data {}'.format(data_string))
+            res = find_key(data_string)
             if res:
                 threading.Thread(target=set_s4_preset, args=(mic_table[res],)).start()
 
@@ -60,7 +63,7 @@ def read_dhd(telnet_instance):
     except Exception:
         e = sys.exc_info()[1]
         log.error(sys.exc_info()[:2])
-        return
+        return -1
 
 
 if __name__ == '__main__':
@@ -69,5 +72,12 @@ if __name__ == '__main__':
     logger_config(is_debug)
     instance = telnetlib.Telnet('192.168.10.222', 2008)
     while True:
-        read_dhd(instance)
+        try:
+            res = read_dhd(instance)
+            if res == -1:
+                log.error("Cannot read data starting new connection")
+                instance.close()
+                instance = telnetlib.Telnet('192.168.10.222', 2008)
+        except Exception:
+            time.sleep(10)
         time.sleep(0.1)
