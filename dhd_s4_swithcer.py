@@ -32,12 +32,12 @@ def set_s4_preset(mic):
         instance.write('login {} {} \r\n'.format(mic["login"], mic["pass"]).encode('ascii'))
         instance.read_until('OK : LOGIN {}\r\n'.format(mic["login"]).encode('ascii'), 3)
         instance.write(('CH{}.Preset.ONAIR={}\r\n'.format(mic["ch"], mic["preset_name"])).encode('ascii'))
-        instance.read_until(b'OK\r\n')
+        instance.read_until(b'OK\r\n',3)
         instance.close()
         log.debug('On bigvoice {} ch{} preset is {}'.format(mic["ip"], mic["ch"], mic["preset_name"]))
     except Exception:
         log.error('Cannot set preset on bigvoice')
-        return 
+        return
 
 def find_key(str):
     for i in mic_table:
